@@ -1,0 +1,28 @@
+[
+  {
+    "id": "first-post",
+    "title": {
+      "en": "The Future of Web Design",
+      "zh": "网页设计的未来"
+    },
+    "content": {
+      "en": "Exploring Next.js 16, Turbopack, and Framer Motion for buttery smooth user experiences.",
+      "zh": "探索 Next.js 16、Turbopack 和 Framer Motion，打造丝滑的用户体验。"
+    },
+    "date": "2026-10-28",
+    "author": "Admin"
+  },
+  {
+    "id": "second-post",
+    "title": {
+      "en": "Why Multi-Language is Essential",
+      "zh": "为什么多语言至关重要"
+    },
+    "content": {
+      "en": "Global reach starts with next-intl. Learn how to scale your app to millions of users.",
+      "zh": "全球触达始于 next-intl。了解如何将您的应用扩展到数百万用户。"
+    },
+    "date": "2026-10-27",
+    "author": "Admin"
+  }
+]

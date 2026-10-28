@@ -1,0 +1,134 @@
+{
+  "HomePage": {
+    "title": "Hello world!",
+    "about": "Go to the about page",
+    "cta": "Get Started",
+    "features": {
+      "fast": "Lightning Fast",
+      "fastDesc": "Built on Next.js 16 with Turbopack for instant load times.",
+      "multi": "Multi-Language",
+      "multiDesc": "Supports English, Chinese, and more out of the box.",
+      "smooth": "Buttery Smooth",
+      "smoothDesc": "Powered by Framer Motion for premium micro-interactions."
+    },
+    "scrollSection": {
+      "title": "Experience the Future",
+      "desc": "Scroll down to see the power of Framer Motion and Next.js 16."
+    }
+  },
+  "FormPage": {
+    "title": "Create an Account",
+    "subtitle": "Join us to experience the best multi-language UI.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "submit": "Sign Up",
+    "success": "Account created successfully!",
+    "back": "Back to Home",
+    "errors": {
+      "name": "Name must be at least 2 characters.",
+      "email": "Please enter a valid email address."
+    }
+  },
+  "Blog": {
+    "title": "Latest Articles",
+    "subtitle": "Thoughts, tutorials, and insights on modern web development."
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "kanban": "Kanban Board",
+    "admin": "Users",
+    "settings": "Settings",
+    "welcome": "Welcome back, Admin!",
+    "stats": "Your Stats",
+    "users": "Total Users",
+    "revenue": "Revenue",
+    "active": "Active Now",
+    "chartTitle": "Revenue Overview",
+    "chartDesc": "Your revenue over the last 6 months."
+  },
+  "Admin": {
+    "title": "User Management",
+    "subtitle": "View and manage all registered users.",
+    "name": "Name",
+    "email": "Email",
+    "status": "Status",
+    "role": "Role",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive",
+    "admin": "Admin",
+    "user": "User",
+    "delete": "Delete",
+    "noUsers": "No users found.",
+    "search": "Search users by name or email...",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {current} of {total}"
+  },
+  "Settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your profile and preferences.",
+    "profile": "Profile Information",
+    "name": "Display Name",
+    "bio": "Bio",
+    "preferences": "Preferences",
+    "emailNotif": "Email Notifications",
+    "emailNotifDesc": "Receive updates about your account.",
+    "marketing": "Marketing Emails",
+    "marketingDesc": "Receive tips and product news.",
+    "save": "Save Changes",
+    "success": "Settings saved successfully!",
+    "updated": "Profile updated successfully!"
+  },
+  "Navbar": {
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "logout": "Log out",
+    "menu": "Menu"
+  },
+  "Kanban": {
+    "title": "Task Board",
+    "subtitle": "Drag and drop tasks to organize your workflow.",
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "done": "Done",
+    "addTask": "Add Task",
+    "placeholder": "Enter new task..."
+  },
+  "Login": {
+    "title": "Welcome Back",
+    "subtitle": "Enter your credentials to access your dashboard.",
+    "email": "Email Address",
+    "password": "Password",
+    "submit": "Log In",
+    "loggingIn": "Logging in...",
+    "error": "Invalid email or password.",
+    "demo": "Demo credentials: admin@myapp.com / password"
+  },
+  "Register": {
+    "title": "Create an Account",
+    "subtitle": "Join us to start building today.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "confirm": "Confirm Password",
+    "submit": "Sign Up",
+    "loading": "Creating account...",
+    "errorMismatch": "Passwords do not match.",
+    "errorExists": "An account with this email already exists.",
+    "success": "Account created! You can now log in.",
+    "hasAccount": "Already have an account?",
+    "loginLink": "Log in"
+  },
+  "NewPost": {
+    "title": "Create New Post",
+    "subtitle": "Publish a new article to your blog.",
+    "postTitle": "Post Title",
+    "content": "Content",
+    "publish": "Publish Post",
+    "publishing": "Publishing...",
+    "success": "Post published successfully!",
+    "error": "Please fill out all fields."
+  }
+}
