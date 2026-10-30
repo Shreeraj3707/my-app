@@ -5,6 +5,25 @@ import { routing } from '@/i18n/routing';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Providers } from '@/components/providers';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'MyApp | The Future of Web',
+  description: 'A premium, multi-language SaaS platform built with Next.js 16, Supabase, and Framer Motion.',
+  openGraph: {
+    title: 'MyApp | The Future of Web',
+    description: 'A premium, multi-language SaaS platform.',
+    url: 'https://myapp.com',
+    siteName: 'MyApp',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MyApp | The Future of Web',
+    description: 'A premium, multi-language SaaS platform.',
+  },
+};
 
 export default async function LocaleLayout({
   children,

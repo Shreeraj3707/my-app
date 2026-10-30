@@ -6,40 +6,36 @@ import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Image from 'next/image';
 
 export function ProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userData, setUserData] = useState<{ name: string; email: string } | null>(null);
+  const [userData, setUserData] = useState<{ name: string; email: string; avatarUrl: string | null } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('Navbar');
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', user.id).single();
         setUserData({
-          name: user.user_metadata.full_name || 'User',
+          name: data?.full_name || user.user_metadata.full_name || 'User',
           email: user.email || '',
+          avatarUrl: data?.avatar_url || null,
         });
       } else {
         setUserData(null);
       }
     };
 
-    getUser();
+    loadUserData();
+    window.addEventListener('profileUpdated', loadUserData);
 
-    // Listen to Supabase auth state changes (like logging out)
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setUserData({
-          name: session.user.user_metadata.full_name || 'User',
-          email: session.user.email || '',
-        });
-      } else {
-        setUserData(null);
-      }
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      loadUserData();
     });
 
     function handleClickOutside(event: MouseEvent) {
@@ -50,10 +46,11 @@ export function ProfileMenu() {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
+      window.removeEventListener('profileUpdated', loadUserData);
       authListener.subscription.unsubscribe();
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -70,15 +67,17 @@ export function ProfileMenu() {
     );
   }
 
-  const initial = userData.name.charAt(0).toUpperCase();
-
   return (
     <div className="relative hidden md:block" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 text-white font-bold shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 text-white font-bold shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 overflow-hidden"
       >
-        {initial}
+        {userData.avatarUrl ? (
+          <Image src={userData.avatarUrl} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" />
+        ) : (
+          userData.name.charAt(0).toUpperCase()
+        )}
       </button>
 
       <AnimatePresence>

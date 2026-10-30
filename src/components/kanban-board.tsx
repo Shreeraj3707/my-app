@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 type Task = {
   id: string;
-  text: string;
+  title: string;
+  status: 'todo' | 'inProgress' | 'done';
+  position: number;
 };
 
 type Columns = {
@@ -15,64 +19,103 @@ type Columns = {
   done: Task[];
 };
 
-const defaultColumns: Columns = {
-  todo: [
-    { id: '1', text: 'Design new landing page' },
-    { id: '2', text: 'Write documentation' },
-  ],
-  inProgress: [
-    { id: '3', text: 'Build authentication flow' },
-  ],
-  done: [
-    { id: '4', text: 'Setup Next.js project' },
-  ],
-};
+const initialColumns: Columns = { todo: [], inProgress: [], done: [] };
 
 export function KanbanBoard() {
   const t = useTranslations('Kanban');
+  const supabase = createClient();
   
-  // Initialize state from local storage or use defaults
-  const [columns, setColumns] = useState<Columns>(defaultColumns);
+  const [columns, setColumns] = useState<Columns>(initialColumns);
   const [newTask, setNewTask] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load from local storage on mount
+  // 1. Fetch tasks from Supabase on load
   useEffect(() => {
-    const saved = localStorage.getItem('kanban-data');
-    if (saved) {
-      try {
-        setColumns(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse saved tasks", e);
+    const fetchTasks = async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('position', { ascending: true });
+
+      if (error) {
+        toast.error('Failed to load tasks');
+        console.error(error);
+      } else {
+        const newColumns: Columns = { todo: [], inProgress: [], done: [] };
+        data.forEach((task) => {
+          newColumns[task.status as keyof Columns].push(task as Task);
+        });
+        setColumns(newColumns);
       }
-    }
-    setIsMounted(true);
-  }, []);
+      setIsLoading(false);
+    };
 
-  // Save to local storage whenever columns change
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('kanban-data', JSON.stringify(columns));
-    }
-  }, [columns, isMounted]);
+    fetchTasks();
+  }, [supabase]);
 
-  const addTask = (e: React.FormEvent) => {
+  // 2. Add a new task
+  const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.trim()) return;
     
-    const task = { id: Date.now().toString(), text: newTask };
-    setColumns({ ...columns, todo: [...columns.todo, task] });
-    setNewTask('');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return toast.error("You must be logged in.");
+
+    const newTaskObj = {
+      user_id: user.id,
+      title: newTask,
+      status: 'todo' as const,
+      position: columns.todo.length,
+    };
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(newTaskObj)
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Failed to add task');
+    } else {
+      setColumns({ 
+        ...columns, 
+        todo: [...columns.todo, data as Task] 
+      });
+      setNewTask('');
+    }
   };
 
-  const deleteTask = (taskId: string, columnType: keyof Columns) => {
+  // 3. Delete a task
+  const deleteTask = async (taskId: string, columnType: keyof Columns) => {
+    // Optimistic UI update (remove instantly)
+    const previousColumns = columns;
     setColumns({
       ...columns,
       [columnType]: columns[columnType].filter((task) => task.id !== taskId),
     });
+
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+    if (error) {
+      toast.error('Failed to delete task');
+      setColumns(previousColumns); // Revert if failed
+    }
   };
 
-  // Helper to render a column
+  // 4. Handle reordering (Drag & Drop)
+  const handleReorder = async (newOrder: Task[], type: keyof Columns) => {
+    // Instantly update UI
+    setColumns({ ...columns, [type]: newOrder });
+
+    // Save new positions to database
+    const updates = newOrder.map((task, index) => ({
+      id: task.id,
+      position: index,
+    }));
+
+    const { error } = await supabase.from('tasks').upsert(updates);
+    if (error) console.error('Failed to save order', error);
+  };
+
   const Column = ({ title, tasks, type }: { title: string, tasks: Task[], type: keyof Columns }) => (
     <div className="flex flex-col flex-1 bg-neutral-100/50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 min-w-[280px]">
       <div className="flex justify-between items-center mb-4">
@@ -82,8 +125,7 @@ export function KanbanBoard() {
         </span>
       </div>
 
-      {/* Reorderable List */}
-      <Reorder.Group axis="y" values={tasks} onReorder={(newOrder) => setColumns({ ...columns, [type]: newOrder })} className="flex flex-col gap-3 flex-1">
+      <Reorder.Group axis="y" values={tasks} onReorder={(newOrder) => handleReorder(newOrder, type)} className="flex flex-col gap-3 flex-1">
         {tasks.map((task) => (
           <Reorder.Item 
             key={task.id} 
@@ -92,7 +134,7 @@ export function KanbanBoard() {
             whileDrag={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }}
           >
             <div className="flex justify-between items-start gap-2">
-              <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 flex-1">{task.text}</span>
+              <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 flex-1">{task.title}</span>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -109,8 +151,7 @@ export function KanbanBoard() {
     </div>
   );
 
-  // Prevent hydration mismatch by waiting for mount
-  if (!isMounted) return <div className="h-96 w-full animate-pulse bg-neutral-100 dark:bg-neutral-900/50 rounded-2xl" />;
+  if (isLoading) return <div className="h-96 w-full animate-pulse bg-neutral-100 dark:bg-neutral-900/50 rounded-2xl" />;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-12 w-full">
@@ -119,7 +160,6 @@ export function KanbanBoard() {
         <p className="text-neutral-600 dark:text-neutral-400">{t('subtitle')}</p>
       </div>
 
-      {/* Add Task Input */}
       <form onSubmit={addTask} className="flex gap-2">
         <input
           type="text"
@@ -133,7 +173,6 @@ export function KanbanBoard() {
         </button>
       </form>
 
-      {/* Kanban Columns */}
       <div className="flex gap-6 overflow-x-auto pb-4 items-start">
         <Column title={t('todo')} tasks={columns.todo} type="todo" />
         <Column title={t('inProgress')} tasks={columns.inProgress} type="inProgress" />
@@ -141,4 +180,4 @@ export function KanbanBoard() {
       </div>
     </motion.div>
   );
-}   
+}

@@ -5,10 +5,12 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export default function NewPostPage() {
   const t = useTranslations('NewPost');
   const router = useRouter();
+  const supabase = createClient();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,18 +25,27 @@ export default function NewPostPage() {
 
     setIsLoading(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // 1. Get current user from Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to post.");
+      setIsLoading(false);
+      return;
+    }
 
-    const newPost = {
-      id: Date.now().toString(),
-      title: { en: title, zh: title },
-      content: { en: content, zh: content },
-      date: new Date().toISOString().split('T')[0],
-      author: localStorage.getItem('user_name') || 'Admin',
-    };
+    // 2. Insert into Supabase
+    const { error } = await supabase.from('posts').insert({
+      author_id: user.id,
+      title: title,
+      content: content,
+    });
 
-    const existingPosts = JSON.parse(localStorage.getItem('custom_posts') || '[]');
-    localStorage.setItem('custom_posts', JSON.stringify([newPost, ...existingPosts]));
+    if (error) {
+      console.error("Supabase Error:", error);
+      toast.error(error.message);
+      setIsLoading(false);
+      return;
+    }
 
     toast.success(t('success'));
     router.push('/blog');

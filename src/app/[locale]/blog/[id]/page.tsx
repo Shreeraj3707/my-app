@@ -5,29 +5,43 @@ import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 import staticPosts from '@/data/posts.json';
 
 export default function PostPage() {
   const { id } = useParams();
   const locale = useLocale();
+  const supabase = createClient();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const foundStatic = staticPosts.find((p) => p.id === id);
-    if (foundStatic) {
-      setPost(foundStatic);
-      setLoading(false);
-      return;
-    }
+    const fetchPost = async () => {
+      // 1. Check Supabase first
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    const customPosts = JSON.parse(localStorage.getItem('custom_posts') || '[]');
-    const foundCustom = customPosts.find((p: any) => p.id === id);
-    if (foundCustom) {
-      setPost(foundCustom);
-    }
-    setLoading(false);
-  }, [id]);
+      if (data) {
+        setPost({
+          id: data.id,
+          title: { en: data.title, zh: data.title },
+          content: { en: data.content, zh: data.content },
+          date: new Date(data.created_at).toISOString().split('T')[0],
+          author: 'Admin',
+        });
+      } else {
+        // 2. Fallback to static JSON
+        const foundStatic = staticPosts.find((p) => p.id === id);
+        if (foundStatic) setPost(foundStatic);
+      }
+      setLoading(false);
+    };
+
+    fetchPost();
+  }, [id, supabase]);
 
   if (loading) {
     return <div className="text-center mt-20 animate-pulse text-neutral-500">Loading...</div>;
