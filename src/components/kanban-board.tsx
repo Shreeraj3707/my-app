@@ -5,6 +5,7 @@ import { motion, Reorder } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { addTask, deleteTask, updateTaskPositions } from '@/app/actions/kanban';
 
 type Task = {
   id: string;
@@ -29,7 +30,7 @@ export function KanbanBoard() {
   const [newTask, setNewTask] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Fetch tasks from Supabase on load
+  // Fetch initial tasks on load
   useEffect(() => {
     const fetchTasks = async () => {
       const { data, error } = await supabase
@@ -39,8 +40,7 @@ export function KanbanBoard() {
 
       if (error) {
         toast.error('Failed to load tasks');
-        console.error(error);
-      } else {
+      } else if (data) {
         const newColumns: Columns = { todo: [], inProgress: [], done: [] };
         data.forEach((task) => {
           newColumns[task.status as keyof Columns].push(task as Task);
@@ -53,67 +53,52 @@ export function KanbanBoard() {
     fetchTasks();
   }, [supabase]);
 
-  // 2. Add a new task
-  const addTask = async (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.trim()) return;
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return toast.error("You must be logged in.");
-
-    const newTaskObj = {
-      user_id: user.id,
-      title: newTask,
-      status: 'todo' as const,
-      position: columns.todo.length,
-    };
-
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(newTaskObj)
-      .select()
-      .single();
-
-    if (error) {
-      toast.error('Failed to add task');
-    } else {
+    try {
+      const task = await addTask(newTask, 'todo', columns.todo.length);
       setColumns({ 
         ...columns, 
-        todo: [...columns.todo, data as Task] 
+        todo: [...columns.todo, task as Task] 
       });
       setNewTask('');
+      toast.success('Task added!');
+    } catch (error) {
+      toast.error('Failed to add task');
     }
   };
 
-  // 3. Delete a task
-  const deleteTask = async (taskId: string, columnType: keyof Columns) => {
-    // Optimistic UI update (remove instantly)
+  const handleDeleteTask = async (taskId: string, columnType: keyof Columns) => {
     const previousColumns = columns;
     setColumns({
       ...columns,
       [columnType]: columns[columnType].filter((task) => task.id !== taskId),
     });
 
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
-    if (error) {
+    try {
+      await deleteTask(taskId);
+    } catch (error) {
       toast.error('Failed to delete task');
-      setColumns(previousColumns); // Revert if failed
+      setColumns(previousColumns); 
     }
   };
 
-  // 4. Handle reordering (Drag & Drop)
   const handleReorder = async (newOrder: Task[], type: keyof Columns) => {
-    // Instantly update UI
     setColumns({ ...columns, [type]: newOrder });
 
-    // Save new positions to database
     const updates = newOrder.map((task, index) => ({
       id: task.id,
       position: index,
+      status: type,
     }));
 
-    const { error } = await supabase.from('tasks').upsert(updates);
-    if (error) console.error('Failed to save order', error);
+    try {
+      await updateTaskPositions(updates);
+    } catch (error) {
+      console.error('Failed to save order');
+    }
   };
 
   const Column = ({ title, tasks, type }: { title: string, tasks: Task[], type: keyof Columns }) => (
@@ -138,7 +123,7 @@ export function KanbanBoard() {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteTask(task.id, type);
+                  handleDeleteTask(task.id, type);
                 }}
                 className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 transition-opacity text-xs font-bold"
               >
@@ -160,7 +145,7 @@ export function KanbanBoard() {
         <p className="text-neutral-600 dark:text-neutral-400">{t('subtitle')}</p>
       </div>
 
-      <form onSubmit={addTask} className="flex gap-2">
+      <form onSubmit={handleAddTask} className="flex gap-2">
         <input
           type="text"
           value={newTask}

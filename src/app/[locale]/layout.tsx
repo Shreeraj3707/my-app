@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Providers } from '@/components/providers';
+import { CommandMenu } from '@/components/command-menu';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider>
           <Providers>
+            <CommandMenu />
             <Navbar />
             <div className="w-full max-w-5xl mx-auto px-6 pt-32 flex-1 flex flex-col items-center">
               {children}

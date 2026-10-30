@@ -130,5 +130,23 @@
     "publishing": "Publishing...",
     "success": "Post published successfully!",
     "error": "Please fill out all fields."
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "empty": "No new notifications",
+    "markRead": "Mark all as read",
+    "newUser": "New user registered",
+    "newPost": "New blog post published"
+  },
+  "Command": {
+    "placeholder": "Type a command or search...",
+    "noResults": "No results found.",
+    "navigation": "Navigation",
+    "dashboard": "Go to Dashboard",
+    "kanban": "Kanban Board",
+    "newPost": "Create New Post",
+    "users": "Manage Users",
+    "settings": "Settings",
+    "toggleTheme": "Toggle Theme"
   }
 }

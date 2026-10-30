@@ -130,5 +130,23 @@
     "publishing": "正在发布...",
     "success": "文章发布成功！",
     "error": "请填写所有字段。"
+  },
+  "Notifications": {
+    "title": "通知",
+    "empty": "没有新通知",
+    "markRead": "全部标为已读",
+    "newUser": "新用户已注册",
+    "newPost": "新博客文章已发布"
+  },
+  "Command": {
+    "placeholder": "输入命令或搜索...",
+    "noResults": "未找到结果。",
+    "navigation": "导航",
+    "dashboard": "前往控制台",
+    "kanban": "任务看板",
+    "newPost": "创建新文章",
+    "users": "管理用户",
+    "settings": "设置",
+    "toggleTheme": "切换主题"
   }
 }

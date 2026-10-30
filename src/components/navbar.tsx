@@ -5,7 +5,7 @@ import { LanguageSwitcher } from './language-switcher';
 import { ThemeToggle } from './theme-toggle';
 import { ProfileMenu } from './profile-menu';
 import { MobileMenu } from './mobile-menu';
-import { NotificationBell } from './notification-bell'; // Import Bell
+import { NotificationBell } from './notification-bell';
 import { Link } from '@/i18n/navigation';
 
 export function Navbar() {
@@ -31,7 +31,17 @@ export function Navbar() {
       </div>
       
       <div className="flex items-center gap-2 md:gap-4">
-        <NotificationBell /> {/* <-- Added Bell Here */}
+        <button 
+          onClick={() => {
+            const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true });
+            document.dispatchEvent(event);
+          }}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-neutral-500 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+        >
+          <span>Search</span>
+          <kbd className="font-sans">⌘K</kbd>
+        </button>
+        <NotificationBell />
         <ThemeToggle />
         <div className="hidden sm:block">
           <LanguageSwitcher />
