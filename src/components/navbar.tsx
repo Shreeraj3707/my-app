@@ -24,6 +24,9 @@ export function Navbar() {
           <Link href="/blog" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors">
             Blog
           </Link>
+          <Link href="/pricing" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors">
+            Pricing
+          </Link>
           <Link href="/form" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors">
             Sign Up
           </Link>

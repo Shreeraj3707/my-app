@@ -6,6 +6,7 @@ import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Providers } from '@/components/providers';
 import { CommandMenu } from '@/components/command-menu';
+import { AIChat } from '@/components/ai-chat';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -48,6 +49,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <Providers>
             <CommandMenu />
+            <AIChat />
             <Navbar />
             <div className="w-full max-w-5xl mx-auto px-6 pt-32 flex-1 flex flex-col items-center">
               {children}

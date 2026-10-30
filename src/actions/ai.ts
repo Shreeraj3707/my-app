@@ -1,7 +1,24 @@
 'use server';
 
+import { ratelimit } from '@/lib/rate-limit';
+import { createClient } from '@/lib/supabase/server';
+
 export async function generateSummary(text: string) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return 'You must be logged in to use AI.';
+    }
+
+    // Rate limit based on the user's ID
+    const { success } = await ratelimit.limit(user.id);
+    
+    if (!success) {
+      return 'Rate limit exceeded. Please wait a minute before trying again.';
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -9,7 +26,7 @@ export async function generateSummary(text: string) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-oss-20b', // The current free model
+        model: 'openai/gpt-oss-20b',
         messages: [
           {
             role: 'system',
