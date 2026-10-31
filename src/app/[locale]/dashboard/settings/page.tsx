@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [marketing, setMarketing] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -23,10 +24,11 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setEmail(user.email || '');
-        const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', user.id).single();
+        const { data } = await supabase.from('profiles').select('full_name, avatar_url, bio').eq('id', user.id).single();
         if (data) {
           setName(data.full_name || '');
           setAvatarUrl(data.avatar_url || null);
+          setBio(data.bio || '');
         }
       }
     };
@@ -45,11 +47,9 @@ export default function SettingsPage() {
 
       const filePath = `${user.id}-${Math.random()}.${fileExt}`;
 
-      // Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       setAvatarUrl(data.publicUrl);
       
@@ -68,13 +68,14 @@ export default function SettingsPage() {
     if (user) {
       const { error } = await supabase.from('profiles').update({ 
         full_name: name, 
-        avatar_url: avatarUrl 
+        avatar_url: avatarUrl,
+        bio: bio
       }).eq('id', user.id);
 
       if (error) toast.error(error.message);
       else {
         toast.success(t('updated'));
-        window.dispatchEvent(new Event('profileUpdated')); // Tells Navbar to update
+        window.dispatchEvent(new Event('profileUpdated'));
       }
     }
   };
@@ -96,11 +97,10 @@ export default function SettingsPage() {
         <section className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 md:p-8 space-y-6">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">{t('profile')}</h2>
           
-          {/* Avatar Upload */}
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden relative">
               {avatarUrl ? (
-                <Image src={avatarUrl} alt="Avatar" fill className="object-cover" />
+                <Image src={avatarUrl} alt="Avatar" fill className="object-cover" sizes="80px" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-neutral-400">
                   {name.charAt(0).toUpperCase() || '?'}
@@ -120,6 +120,18 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('name')}</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 text-neutral-900 dark:text-white" />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Bio</label>
+              <textarea 
+                value={bio} 
+                onChange={(e) => setBio(e.target.value)} 
+                rows={3}
+                placeholder="Tell us about yourself..."
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 text-neutral-900 dark:text-white resize-none" 
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Email (Read Only)</label>
               <input type="email" value={email} disabled className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800/80 border border-neutral-300 dark:border-neutral-700 rounded-xl text-neutral-500 cursor-not-allowed" />

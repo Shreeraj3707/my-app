@@ -11,6 +11,7 @@ export function Sidebar() {
   const links = [
     { href: '/dashboard', label: t('overview'), icon: '📊' },
     { href: '/dashboard/kanban', label: t('kanban'), icon: '📋' },
+    { href: '/dashboard/media', label: 'Media Library', icon: '📸' },
     { href: '/dashboard/admin', label: t('admin'), icon: '👥' },
     { href: '/dashboard/new-post', label: 'New Post', icon: '✍️' },
     { href: '/dashboard/settings', label: t('settings'), icon: '⚙️' },

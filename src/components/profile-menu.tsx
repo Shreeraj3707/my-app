@@ -8,9 +8,16 @@ import { useRouter } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 
+type UserData = {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+};
+
 export function ProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userData, setUserData] = useState<{ name: string; email: string; avatarUrl: string | null } | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('Navbar');
   const router = useRouter();
@@ -22,6 +29,7 @@ export function ProfileMenu() {
       if (user) {
         const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', user.id).single();
         setUserData({
+          id: user.id,
           name: data?.full_name || user.user_metadata.full_name || 'User',
           email: user.email || '',
           avatarUrl: data?.avatar_url || null,
@@ -93,6 +101,12 @@ export function ProfileMenu() {
               <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{userData.name}</p>
               <p className="text-xs text-neutral-500 truncate">{userData.email}</p>
             </div>
+
+            <Link href={`/profile/${userData.id}`} onClick={() => setIsOpen(false)}>
+              <div className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                Public Profile
+              </div>
+            </Link>
 
             <Link href="/dashboard" onClick={() => setIsOpen(false)}>
               <div className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">

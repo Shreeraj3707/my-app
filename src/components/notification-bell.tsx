@@ -4,12 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { Link } from '@/i18n/navigation';
 
 type Notification = {
   id: string;
   title: string;
   is_read: boolean;
   created_at: string;
+  link: string | null;
+  type: string;
 };
 
 export function NotificationBell() {
@@ -36,14 +39,12 @@ export function NotificationBell() {
 
     fetchNotifications();
 
-    // Subscribe to Realtime updates!
     const channel = supabase
       .channel('realtime_notifications')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications' },
         (payload) => {
-          // If a new notification arrives, add it to the top of the list
           setNotifications((current) => [payload.new as Notification, ...current]);
         }
       )
@@ -65,13 +66,19 @@ export function NotificationBell() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAllRead = async () => {
-    const updated = notifications.map(n => ({ ...n, is_read: true }));
-    setNotifications(updated);
-    
-    // Update in Supabase
+    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
     const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
     if (unreadIds.length > 0) {
       await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    }
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'like': return '❤️';
+      case 'comment': return '💬';
+      case 'follow': return '👤';
+      default: return '🔔';
     }
   };
 
@@ -121,15 +128,17 @@ export function NotificationBell() {
                 </div>
               ) : (
                 notifications.map((notif) => (
-                  <div
-                    key={notif.id}
+                  <Link 
+                    key={notif.id} 
+                    href={notif.link || '#'}
+                    onClick={() => setIsOpen(false)}
                     className={`flex items-start gap-3 p-4 border-b border-neutral-100 dark:border-neutral-800/50 last:border-0 transition-colors ${
                       notif.is_read 
                         ? 'opacity-60 hover:bg-neutral-50 dark:hover:bg-neutral-800/30' 
                         : 'bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
                     }`}
                   >
-                    <div className="text-2xl">🔔</div>
+                    <div className="text-xl">{getIcon(notif.type)}</div>
                     <div className="flex-1">
                       <p className={`text-sm ${notif.is_read ? 'text-neutral-600 dark:text-neutral-400' : 'font-medium text-neutral-900 dark:text-white'}`}>
                         {notif.title}
@@ -141,7 +150,7 @@ export function NotificationBell() {
                     {!notif.is_read && (
                       <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5"></div>
                     )}
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
