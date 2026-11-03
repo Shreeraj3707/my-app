@@ -9,6 +9,7 @@ import { Link } from '@/i18n/navigation';
 type Message = {
   id: string;
   sender_id: string;
+  receiver_id: string;
   content: string;
   created_at: string;
 };
@@ -22,11 +23,9 @@ export default function ChatPage() {
   const [receiverName, setReceiverName] = useState('Loading...');
   const [isReceiverOnline, setIsReceiverOnline] = useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Create the channel at the top level so both useEffect and handleTyping can use it
   const channelRef = useRef<any>(null);
 
   const scrollToBottom = () => {
@@ -52,7 +51,7 @@ export default function ChatPage() {
         .select('*')
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`)
         .order('created_at', { ascending: true });
-      
+
       if (initialMessages) setMessages(initialMessages);
       setTimeout(scrollToBottom, 100);
 
@@ -107,7 +106,7 @@ export default function ChatPage() {
 
     const content = newMessage;
     setNewMessage('');
-    
+
     await supabase.from('messages').insert({
       sender_id: currentUser.id,
       receiver_id: receiverId,
@@ -138,7 +137,7 @@ export default function ChatPage() {
             </div>
           );
         })}
-        
+
         {isReceiverTyping && (
           <div className="flex justify-start">
             <div className="bg-neutral-200 dark:bg-neutral-800 p-2 rounded-xl rounded-bl-none text-xs text-neutral-500 animate-pulse">
